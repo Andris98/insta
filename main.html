@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="register_style.css" />
+    <link rel="stylesheet" href="insta_style.css" />
+    <style>
+      .form-control.invalid {
+        background-color: red;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="content"></div>
+    <script>
+      // Login page
+
+      sessionStorage.clear();
+
+      const users = JSON.parse(localStorage.getItem("users")) || [];
+
+      showLoginPage();
+
+      //userEmail => currentUser.email
+
+      // Register page
+      function showRegisterPage() {
+        const container = document.getElementById("content");
+
+        const registerHtml = `
+                      <div class="container">
+                          <div class="registeru" id="register">
+                              <h2>Register</h2>
+                              <form onsubmit="register(event)">
+                                  <div class="inputBox">
+                                      <input type="text" id="firstName" required placeholder="FirstName">
+                                      <label>First Name</label>
+                                  </div>
+                                  <div class="inputBox">
+                                      <input type="text" id="lastName" required placeholder="LastName">
+                                      <label>Last Name</label>
+                                  </div>
+                                  <div class="inputBox">
+                                      <input type="email" class="form-control" id="uEmail" required placeholder="Email">
+                                      <label>Email</label>
+                                  </div>
+                                  <div class="inputBox">
+                                      <input type="password" class="form-control" id="passwd1" required placeholder="Passwd">
+                                      <label>Password</label>
+                                  </div>
+                                  <div class="inputBox">
+                                      <input type="password" class="form-control" id="passwd2" required placeholder="Passwd again">
+                                      <label>Repeat Password</label>
+                                  </div>
+                                  <div class="inputBox">
+                                      <input type="submit" value="Register">
+                                  </div>
+                              </form>
+                              <p>Already have an account?</p>
+                              <p><a href="#" onclick="showLoginPage()">Login here</a></p>
+                              <div id="register-status"></div>
+                          </div>
+                      </div>
+                  `;
+
+        container.innerHTML = registerHtml;
+      }
+
+      function showLoginPage() {
+        const container = document.getElementById("content");
+
+        const html = `<div class="container">
+                                <div class="loginu" id="login">
+                                    <h2>Log in</h2>
+                                    <form onsubmit="logIn(event)">
+                                        <div class="inputBox">
+                                            <input type="email" class="form-control" id="email" required>
+                                            <label>Email</label>
+                                        </div>
+                                        <div class="inputBox">
+                                            <input type="password" class="form-control" id="password" required>
+                                            <label>Password</label>
+                                        </div>
+                                        <div class="inputBox">
+                                            <input type="submit" value="Sign in">
+                                        </div>
+                                    </form>
+                                    <p>Don't have an account?</p>
+                                    <p><a href="#" onclick="showRegisterPage()">Register here</a></p>
+                                    <div id="login-status"></div>
+                                </div>
+                            </div>`;
+        container.innerHTML = html;
+      }
+
+      function checkIfUserExists(email) {
+        return users.some((user) => user.email === email);
+      }
+
+      function checkEmail(email) {
+        let emailReg = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        return emailReg.test(email);
+      }
+
+      function checkPasswd(passwd) {
+        let passwdRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{6,12}$/;
+        return passwdRegex.test(passwd);
+      }
+
+      /**
+       * Handles the login process for the user.
+       * Prevents the default form submission behavior to allow validation.
+       * Validates the email and password fields, displaying appropriate error messages
+       * if the input is invalid or if the credentials do not match any stored users.
+       * If a valid user is found, stores the user's email in sessionStorage and
+       * redirects to the home page.
+       *
+       * @param {Event} event - The event object associated with the form submission.
+       */
+      function logIn(event) {
+        event.preventDefault();
+
+        let email = document.getElementById("email").value;
+        if (!checkEmail(email)) {
+          document.getElementById("login-status").innerHTML =
+            "Invalid email address";
+          document.getElementById("email").classList.add("invalid");
+          return;
+        } else {
+          document.getElementById("email").classList.remove("invalid");
+        }
+
+        let password = document.getElementById("password").value;
+
+        const user = users.find(
+          (u) => u.email === email && u.password === password
+        );
+        if (user) {
+          sessionStorage.setItem("currentUser", email);
+          //currentUser = sessionStorage.getItem("currentUser");
+          generatesHomePage();
+        } else {
+          document.getElementById("login-status").innerHTML =
+            "Invalid email or password";
+          document.getElementById("email").classList.add("invalid");
+          document.getElementById("password").classList.add("invalid");
+        }
+      }
+
+      /**
+       * Handles the registration process for a new user.
+       * Prevents the default form submission behavior to allow validation.
+       * Validates the email, password, and confirmation password fields, displaying
+       * appropriate error messages if the input is invalid or if the email is already associated with an existing user.
+       * If all validations pass, stores the new user information in localStorage and sets the current user's email in sessionStorage.
+       * Redirects to the home page upon successful registration.
+       *
+       * @param {Event} event - The event object associated with the form submission.
+       */
+      function register(event) {
+        event.preventDefault();
+
+        let email = document.getElementById("uEmail").value;
+        if (!checkEmail(email)) {
+          document.getElementById("register-status").innerHTML =
+            "Invalid email address";
+          document.getElementById("uEmail").classList.add("invalid");
+          return;
+        } else {
+          document.getElementById("uEmail").classList.remove("invalid");
+        }
+
+        let password = document.getElementById("passwd1").value;
+        if (!checkPasswd(password)) {
+          document.getElementById("register-status").innerHTML =
+            "Password does not meet criteria";
+          document.getElementById("passwd1").classList.add("invalid");
+          return;
+        } else {
+          document.getElementById("passwd1").classList.remove("invalid");
+        }
+
+        let confirmPassword = document.getElementById("passwd2").value;
+        if (password !== confirmPassword) {
+          document.getElementById("register-status").innerHTML =
+            "Passwords do not match";
+          document.getElementById("passwd2").classList.add("invalid");
+          return;
+        } else {
+          document.getElementById("passwd2").classList.remove("invalid");
+        }
+
+        if (checkIfUserExists(email)) {
+          document.getElementById("register-status").innerHTML =
+            "User already exists";
+          document.getElementById("uEmail").classList.add("invalid");
+          return;
+        }
+
+        let firstName = document.getElementById("firstName").value;
+        let lastName = document.getElementById("lastName").value;
+
+        let user = {
+          firstName: firstName,
+          lastName: lastName,
+          email: email,
+          password: password,
+          image: "",
+        };
+
+        users.push(user);
+        localStorage.setItem("users", JSON.stringify(users));
+        sessionStorage.setItem("currentUser", email);
+        //currentUser = sessionStorage.getItem("currentUser");
+        generatesHomePage();
+      }
+
+      /**
+       * Generates the menu component for the page.
+       * @return {HTMLElement} The menu component to be appended to the page.
+       */
+      function generateMenu() {
+        const menu = document.createElement("div");
+        menu.className = "box menu";
+
+        const instagramLogo = document.createElement("span");
+        instagramLogo.textContent = "Instagram";
+        instagramLogo.className = "insta-logo";
+
+        const menuItems = [
+          { icon: "home-icon", id: "home", text: "Home" },
+          { icon: "search-icon", id: "search", text: "Search" },
+          { icon: "explore-icon", text: "Explore" },
+          { icon: "reels-icon", text: "Reels" },
+          { icon: "messages-icon", text: "Messages" },
+          { icon: "notifications-icon", text: "Notifications" },
+          { icon: "create-icon", id: "create", text: "Create" },
+          { icon: "profile-icon", id: "profile", text: "Profile" },
+          { icon: "more-icon", text: "More" },
+        ];
+
+        const nav = document.createElement("nav");
+        const ul = document.createElement("ul");
+
+        menuItems.forEach((item) => {
+          const li = document.createElement("li");
+          const a = document.createElement("a");
+          a.href = "#";
+
+          if (item.icon) {
+            const icon = document.createElement("span");
+            icon.className = `icon ${item.icon}`;
+            a.appendChild(icon);
+
+            if (item.id === "home") {
+              a.addEventListener("click", function () {
+                //console.log("clicked");
+                generatesHomePage();
+              });
+            }
+
+            if (item.id === "profile") {
+              a.addEventListener("click", function () {
+                //console.log("clicked");
+                generatesProfilePage();
+              });
+            }
+
+            if (item.id === "create") {
+              a.addEventListener("click", function () {
+                const modal = document.createElement("div");
+                modal.className = "modal";
+
+                const modalContent = document.createElement("div");
+                modalContent.className = "modal-content";
+
+                const addButton = document.createElement("button");
+                addButton.textContent = "Add Gallery";
+                addButton.className = "add-gallery-button";
+
+                modalContent.appendChild(addButton);
+                modal.appendChild(modalContent);
+
+                document.body.appendChild(modal);
+
+                addButton.addEventListener("click", function () {
+                  uploadGalleryImage();
+                });
+                window.onclick = function (event) {
+                  if (event.target == modal) {
+                    modal.style.display = "none";
+                  }
+                };
+              });
+            }
+          }
+
+          if (item.button && item.clickable) {
+            const button = document.createElement("button");
+            button.className = `button ${item.button}`;
+            button.textContent = item.text;
+            a.appendChild(button);
+            button.addEventListener("click", function (e) {
+              e.preventDefault();
+              generatesProfilePage();
+            });
+          } else {
+            const text = document.createElement("span");
+            text.className = "text";
+            text.textContent = item.text;
+            a.appendChild(text);
+          }
+
+          li.appendChild(a);
+          ul.appendChild(li);
+        });
+
+        menu.appendChild(instagramLogo);
+
+        instagramLogo.addEventListener("click", function (e) {
+          e.preventDefault();
+          generatesHomePage();
+        });
+
+        nav.appendChild(ul);
+        menu.appendChild(nav);
+        return menu;
+      }
+
+      /**
+       * Generates the home page component for the Instagram clone.
+       * Clears the current page content, creates a new page element, and appends the menu and story components to it.
+       * The story component is populated with three hardcoded user profiles, containing an image, name, and a link to the user's profile page.
+       * Finally, the page element is appended to the document body.
+       */
+      function generatesHomePage() {
+        document.body.innerHTML = "";
+
+        const page = document.createElement("div");
+        page.className = "page";
+
+        const menu = generateMenu();
+        page.appendChild(menu);
+
+        //story
+
+        const story = document.createElement("div");
+        story.className = "box story";
+        const storyItems = [
+          {
+            image:
+              "https://plus.unsplash.com/premium_photo-1721736018999-f6285dc514c3?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8dXNlciUyMHByb2ZpbGUlMjBwaG90b3xlbnwwfHwwfHx8MA%3D%3D",
+          },
+          {
+            image:
+              "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8dXNlciUyMHByb2ZpbGUlMjBwaG90b3xlbnwwfHwwfHx8MA%3D%3D",
+          },
+          {
+            image:
+              "https://images.unsplash.com/photo-1584999734482-0361aecad844?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8dXNlciUyMHByb2ZpbGUlMjBwaG90b3xlbnwwfHwwfHx8MA%3D%3D",
+          },
+        ];
+        storyItems.forEach((item) => {
+          const storyItem = document.createElement("div");
+          storyItem.className = "story-circle";
+          const image = document.createElement("img");
+          image.src = item.image;
+          image.alt = "Image";
+          storyItem.appendChild(image);
+          const name = document.createElement("span");
+          name.textContent = item.name;
+          storyItem.appendChild(name);
+
+          story.appendChild(storyItem);
+        });
+        page.appendChild(story);
+
+        document.body.appendChild(page);
+
+        //sugesstions
+
+        const suggestions = users.filter((user) => {
+          return (
+            user.email !== sessionStorage.getItem("currentUser") &&
+            (!user.followers ||
+              !user.followers.includes(sessionStorage.getItem("currentUser")))
+          );
+        });
+        //console.log("suggestions", suggestions);
+        //console.log(suggestions.length);
+
+        const suggestionsContainer = document.createElement("div");
+        suggestionsContainer.className = "box suggest";
+
+        //userProfileSuggestions START
+
+        const currentUserProfile = document.createElement("div");
+        currentUserProfile.className = "current-user";
+
+        const currentUserEmail = sessionStorage.getItem("currentUser");
+        const currentUser = users.find((u) => u.email === currentUserEmail);
+
+        const currentUserProfilePicture = document.createElement("img");
+        currentUserProfilePicture.src =
+          currentUser.image || "default-image-url.jpg";
+        currentUserProfilePicture.alt = "Current User Profile Picture";
+        currentUserProfile.appendChild(currentUserProfilePicture);
+
+        currentUserProfilePicture.addEventListener("click", function (e) {
+          e.preventDefault();
+          generatesProfilePage();
+        });
+
+        const currentUserFullName = document.createElement("p");
+        currentUserFullName.textContent = `${currentUser.firstName} ${currentUser.lastName}`;
+        currentUserProfile.appendChild(currentUserFullName);
+
+        suggestionsContainer.appendChild(currentUserProfile);
+
+        //userProfileSuggest END
+
+        const suggestionsHeader = document.createElement("span");
+        suggestionsHeader.textContent = "Suggestions";
+        suggestionsContainer.appendChild(suggestionsHeader);
+
+        suggestions.forEach((suggestion) => {
+          const suggestionContainer = document.createElement("div");
+          suggestionContainer.className = "suggestion";
+
+          const image = document.createElement("img");
+          image.src = suggestion.image;
+          image.alt = "Image";
+          suggestionContainer.appendChild(image);
+
+          const name = document.createElement("span");
+          name.textContent = `${suggestion.firstName} ${suggestion.lastName}`;
+          suggestionContainer.appendChild(name);
+
+          const followButton = document.createElement("button");
+          followButton.className = "follow-button";
+          followButton.textContent = "Follow";
+          suggestionContainer.appendChild(followButton);
+
+          followButton.addEventListener("click", () => {
+            //console.log(suggestion.email);
+            followUser(suggestion);
+            suggestionContainer.remove();
+          });
+
+          suggestionsContainer.appendChild(suggestionContainer);
+        });
+        //suggestionsContainer.appendChild(userProfile);
+        page.appendChild(suggestionsContainer);
+
+        //posts
+
+        const postsContainer = document.createElement("div");
+        postsContainer.className = "box post";
+        postsContainer.innerHTML = ""; //generatePosts();
+        page.appendChild(postsContainer);
+      }
+      function uploadProfilePicture() {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = "image/*";
+
+        input.addEventListener("change", (e) => {
+          const file = input.files[0];
+          const reader = new FileReader();
+
+          reader.onload = (e) => {
+            const imageData = e.target.result;
+
+            const userIndex = users.findIndex(
+              (u) => u.email === sessionStorage.getItem("currentUser")
+            );
+            if (userIndex !== -1) {
+              users[userIndex].image = imageData;
+              localStorage.setItem("users", JSON.stringify(users));
+              displayProfilePicture(imageData);
+            } else {
+              console.error("User not found.");
+            }
+          };
+
+          reader.readAsDataURL(file);
+        });
+
+        input.click();
+      }
+
+      ///
+      function uploadGalleryImage() {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = "image/*";
+
+        input.addEventListener("change", (e) => {
+          const file = input.files[0];
+          const reader = new FileReader();
+
+          reader.onload = (e) => {
+            const imageData = e.target.result;
+
+            const userIndex = users.findIndex(
+              (u) => u.email === sessionStorage.getItem("currentUser")
+            );
+            if (userIndex !== -1) {
+              if (!users[userIndex].gallery) {
+                users[userIndex].gallery = [];
+              }
+              users[userIndex].gallery.push(imageData);
+              localStorage.setItem("users", JSON.stringify(users));
+              displayGalleryImage(imageData);
+            } else {
+              console.error("User not found.");
+            }
+          };
+
+          reader.readAsDataURL(file);
+        });
+
+        input.click();
+      }
+
+      function generatesProfilePage() {
+        document.body.innerHTML = "";
+
+        const page = document.createElement("div");
+        page.className = "page";
+
+        const menu = generateMenu();
+        page.appendChild(menu);
+
+        const user = users.find(
+          (u) => u.email === sessionStorage.getItem("currentUser")
+        );
+
+        if (!user) {
+          console.error("User not found.");
+          return;
+        }
+
+        const fullName = `${user.firstName} ${user.lastName}`;
+        const profileInfo = document.createElement("div");
+        profileInfo.className = "profile-info";
+
+        const currentUserData = users.find(
+          (user) => user.email === sessionStorage.getItem("currentUser")
+        );
+
+        const followerCount = currentUserData.followers
+          ? currentUserData.followers.length
+          : 0;
+        const followingCount = currentUserData.follows
+          ? currentUserData.follows.length
+          : 0;
+
+        profileInfo.addEventListener("click", (e) => {
+          if (e.target.classList.contains("follower-count")) {
+            showFollowersModal();
+          } else if (e.target.classList.contains("following-count")) {
+            showFollowingModal();
+          }
+        });
+
+        const followerCountDiv = document.createElement("div");
+        followerCountDiv.className = "follower-count";
+        followerCountDiv.textContent = `${followerCount} Followers`;
+        profileInfo.appendChild(followerCountDiv);
+
+        const followingCountDiv = document.createElement("div");
+        followingCountDiv.className = "following-count";
+        followingCountDiv.textContent = `${followingCount} Following`;
+        profileInfo.appendChild(followingCountDiv);
+
+        const fullNameElement = document.createElement("h2");
+        fullNameElement.textContent = fullName;
+        fullNameElement.className = "full-name";
+        profileInfo.appendChild(fullNameElement);
+
+        const emailElement = document.createElement("p");
+        emailElement.textContent = user.email;
+        emailElement.className = "email";
+        profileInfo.appendChild(emailElement);
+
+        const bioElement = document.createElement("p");
+        bioElement.textContent = user.bio;
+        bioElement.className = "bio";
+        profileInfo.appendChild(bioElement);
+
+        const profilePictureElement = document.createElement("img");
+        profilePictureElement.className = "profile-picture";
+        profilePictureElement.alt = "Profile Picture";
+        profilePictureElement.src = user.image || "default-image-url.jpg";
+        profileInfo.appendChild(profilePictureElement);
+
+        profilePictureElement.addEventListener("click", () => {
+          uploadProfilePicture();
+        });
+
+        const buttonElement = document.createElement("div");
+        buttonElement.className = "button-container";
+
+        // add profile pic button
+        /*const uploadProfileButton = document.createElement("button");
+        uploadProfileButton.textContent = "Change Profile Picture";
+        uploadProfileButton.className = "upload-button";
+        buttonElement.appendChild(uploadProfileButton);
+*/
+        // add edit bio button
+        const editBio = document.createElement("button");
+        editBio.textContent = "Edit Bio";
+        editBio.className = "edit-bio";
+        buttonElement.appendChild(editBio);
+
+        // add gallery button
+        const uploadGalleryButton = document.createElement("button");
+        uploadGalleryButton.textContent = "Add to Gallery";
+        uploadGalleryButton.className = "upload-button";
+        buttonElement.appendChild(uploadGalleryButton);
+
+        //gallery
+        const galleryContainer = document.createElement("div");
+        galleryContainer.className = "gallery-container";
+
+        // uploadProfileButton.addEventListener("click", uploadProfilePicture);
+        editBio.addEventListener("click", editProfileBio);
+        uploadGalleryButton.addEventListener("click", uploadGalleryImage);
+
+        page.appendChild(profileInfo);
+        page.appendChild(buttonElement);
+        page.appendChild(galleryContainer);
+        document.body.appendChild(page);
+        generateGallery();
+
+        /**
+         * Opens an input file dialog for the user to select a new profile picture.
+         * Upon selecting a file, it will read the file as a data URL and update the
+         * current user's profile picture in local storage. It will then call
+         * displayProfilePicture to update the profile picture in the UI.
+         */
+
+        function generateGallery() {
+          const userIndex = users.findIndex(
+            (u) => u.email === sessionStorage.getItem("currentUser")
+          );
+          const userGallery = users[userIndex].gallery;
+
+          for (let i = 0; i < userGallery.length; i++) {
+            displayGalleryImage(userGallery[i]);
+          }
+        }
+
+        /**
+         * Opens an input file dialog for the user to select a new image to
+         * upload to their gallery. Upon selecting a file, it will read the file
+         * as a data URL and update the current user's gallery in local storage.
+         * It will then call displayGalleryImage to update the gallery in the UI.
+         */
+
+        function displayProfilePicture(imageData) {
+          const profilePictureElement =
+            document.querySelector(".profile-picture");
+          if (profilePictureElement) {
+            profilePictureElement.src = imageData;
+          }
+        }
+        function createModal(imageData) {
+          const currentUser = sessionStorage.getItem("currentUser");
+
+          if (!currentUser) {
+            console.error("No current user found.");
+            return;
+          }
+
+          const modal = document.createElement("div");
+          modal.className = "modal";
+
+          const modalContent = document.createElement("div");
+          modalContent.className = "modal-content";
+
+          const modalImage = document.createElement("img");
+          modalImage.src = imageData;
+          modalImage.alt = "Modal Image";
+
+          const modClose = document.createElement("span");
+          modClose.className = "close";
+          modClose.textContent = "X";
+
+          const upLoader = document.createElement("div");
+          upLoader.className = "upLoader-container";
+          modalContent.appendChild(upLoader);
+
+          const users = JSON.parse(localStorage.getItem("users")); // Define users variable here
+
+          users.forEach((user) => {
+            if (user.email === currentUser) {
+              const uploaderImage = document.createElement("img");
+              uploaderImage.className = "uploader-img";
+              uploaderImage.src = user.image;
+
+              const uploaderName = document.createElement("span");
+              uploaderName.className = "uploader-text";
+              uploaderName.textContent = `${user.firstName} ${user.lastName}`;
+
+              upLoader.appendChild(uploaderImage);
+              upLoader.appendChild(uploaderName);
+            }
+          });
+
+          modalContent.appendChild(modalImage);
+          modal.appendChild(modalContent);
+          modalContent.appendChild(modClose);
+
+          modClose.onclick = function () {
+            modal.style.display = "none";
+          };
+
+          modal.style.display = "flex";
+
+          const commentSection = document.createElement("div");
+          commentSection.className = "comments-container";
+
+          const txt = document.createElement("text");
+          txt.textContent = "Comments";
+          txt.style.marginBottom = "20px";
+
+          const commentsList = document.createElement("ul");
+
+          const commentInput = document.createElement("input");
+          commentInput.className = "add-comm";
+
+          const addCommButton = document.createElement("button");
+          addCommButton.className = "add-comm-button";
+          addCommButton.textContent = "Add Comment";
+
+          const userIndex = users.findIndex(
+            (user) => user.email === currentUser
+          );
+
+          const imageComments = users[userIndex].galleryComments[imageData];
+          if (imageComments) {
+            imageComments.forEach((comment) => {
+              const commentListItem = document.createElement("li");
+              commentListItem.textContent = comment;
+              commentsList.appendChild(commentListItem);
+            });
+          }
+
+          addCommButton.onclick = function () {
+            console.log("Add comment button clicked!");
+            const comment = document.querySelector(".add-comm").value;
+            const imageId = imageData;
+
+            if (!users[userIndex].galleryComments) {
+              users[userIndex].galleryComments = {};
+            }
+
+            if (!users[userIndex].galleryComments[imageId]) {
+              users[userIndex].galleryComments[imageId] = [];
+            }
+
+            users[userIndex].galleryComments[imageId].push(comment);
+
+            localStorage.setItem("users", JSON.stringify(users));
+
+            document.querySelector(".add-comm").value = "";
+
+            commentsList.innerHTML = "";
+
+            const newImageComments = users[userIndex].galleryComments[imageId];
+            if (newImageComments) {
+              newImageComments.forEach((comment) => {
+                const commentListItem = document.createElement("li");
+                commentListItem.textContent = comment;
+                commentsList.appendChild(commentListItem);
+              });
+            }
+          };
+
+          commentSection.appendChild(txt);
+          commentSection.appendChild(commentInput);
+          commentSection.appendChild(addCommButton);
+
+          commentSection.appendChild(commentsList);
+
+          modalContent.appendChild(commentSection);
+          page.appendChild(modal);
+        }
+        function displayGalleryImage(imageData) {
+          const galleryImage = document.createElement("img");
+          galleryImage.src = imageData;
+          galleryImage.alt = "Gallery Image";
+          galleryImage.style.width = "100%";
+          galleryImage.style.height = "auto";
+          galleryImage.style.objectFit = "cover";
+          galleryContainer.appendChild(galleryImage);
+
+          galleryImage.addEventListener("click", function () {
+            createModal(imageData);
+          });
+        }
+
+        function editProfileBio() {
+          const editFName = document.createElement("input");
+          const editLName = document.createElement("input");
+          const edittEmail = document.createElement("input");
+          const bio = document.createElement("input");
+          const saveButton = document.createElement("button");
+
+          editFName.type = "text";
+          editLName.type = "text";
+          edittEmail.type = "email";
+          bio.type = "text";
+          saveButton.textContent = "Save";
+          saveButton.className = "save";
+
+          editFName.placeholder = "First Name";
+          editLName.placeholder = "Last Name";
+          edittEmail.placeholder = "Email";
+          bio.placeholder = "Your bio";
+
+          const profileInfo = document.querySelector(".profile-info");
+          profileInfo.appendChild(editFName);
+          profileInfo.appendChild(editLName);
+          profileInfo.appendChild(edittEmail);
+          profileInfo.appendChild(bio);
+          profileInfo.appendChild(saveButton);
+
+          saveButton.addEventListener("click", () => {
+            const userEmail = sessionStorage.getItem("currentUser");
+            const userIndex = users.findIndex(
+              (u) => u.email === sessionStorage.getItem("currentUser")
+            );
+            if (userIndex !== -1) {
+              if (editFName.value) {
+                users[userIndex].firstName = editFName.value;
+              }
+              if (editLName.value) {
+                users[userIndex].lastName = editLName.value;
+              }
+              if (edittEmail.value) {
+                users[userIndex].email = edittEmail.value;
+              }
+              if (bio.value) {
+                users[userIndex].bio = bio.value;
+              }
+              localStorage.setItem("users", JSON.stringify(users));
+
+              const fullNameElement = document.querySelector(".full-name");
+              fullNameElement.textContent = `${users[userIndex].firstName} ${users[userIndex].lastName}`;
+            } else {
+              console.error("User not found.");
+            }
+            profileInfo.removeChild(editFName);
+            profileInfo.removeChild(editLName);
+            profileInfo.removeChild(edittEmail);
+            profileInfo.removeChild(saveButton);
+            profileInfo.removeChild(bio);
+          });
+        }
+      }
+      function followUser(suggestion) {
+        const currentUser = sessionStorage.getItem("currentUser");
+        users.forEach((user) => {
+          if (user.email === sessionStorage.getItem("currentUser")) {
+            if (!user.follows) {
+              user.follows = [];
+            }
+            user.follows.push(suggestion.email);
+          }
+          if (user.email === suggestion.email) {
+            if (!user.followers) {
+              user.followers = [];
+            }
+            user.followers.push(sessionStorage.getItem("currentUser"));
+          }
+        });
+        localStorage.setItem("users", JSON.stringify(users));
+      }
+
+      function showFollowersModal() {
+        const currentUserData = users.find(
+          (user) => user.email === sessionStorage.getItem("currentUser")
+        );
+
+        const modal = document.createElement("div");
+        modal.className = "followers-modal";
+        const modalHeader = document.createElement("h2");
+        modalHeader.textContent = "Followers";
+        modal.appendChild(modalHeader);
+
+        const searchBar = document.createElement("input");
+        searchBar.type = "search";
+        searchBar.placeholder = "Search followers...";
+        modal.appendChild(searchBar);
+
+        const followersList = document.createElement("ul");
+        modal.appendChild(followersList);
+
+        const followers = users
+          .filter((user) => currentUserData.followers.includes(user.email))
+          .map((user) => ({
+            email: user.email,
+            image: user.image,
+            fullName: `${user.firstName} ${user.lastName}`,
+          }));
+
+        searchBar.addEventListener("keypress", (e) => {
+          if (e.key === "Enter") {
+            const searchTerm = searchBar.value.toLowerCase();
+            const filteredFollowers = followers.filter((follower) => {
+              return follower.fullName.toLowerCase().includes(searchTerm);
+            });
+            followersList.innerHTML = "";
+            filteredFollowers.forEach((follower) => {
+              const followerListItem = document.createElement("li");
+              const followerImage = document.createElement("img");
+              followerImage.src = follower.image;
+              followerImage.alt = follower.fullName;
+              const followerName = document.createElement("span");
+              followerName.textContent = follower.fullName;
+              followerListItem.appendChild(followerImage);
+              followerListItem.appendChild(followerName);
+              followersList.appendChild(followerListItem);
+
+              const removeButton = document.createElement("button");
+              removeButton.className = "follow-button";
+              removeButton.textContent = "Remove";
+              followerListItem.appendChild(removeButton);
+
+              const followerEmail = follower.email;
+
+              removeButton.addEventListener("click", () => {
+                const currentUser = sessionStorage.getItem("currentUser");
+                const followerEmail = follower.email;
+                const usersData = JSON.parse(localStorage.getItem("users"));
+                const updatedUsers = usersData.map((user) => {
+                  if (user.email === currentUser) {
+                    user.followers = user.followers.filter(
+                      (email) => email !== followerEmail
+                    );
+                  }
+                  if (user.email === followerEmail && user.follows) {
+                    user.follows = user.follows.filter(
+                      (email) => email !== currentUser
+                    );
+                  }
+                  return user;
+                });
+                localStorage.setItem("users", JSON.stringify(updatedUsers));
+                followerListItem.remove();
+              });
+            });
+          }
+        });
+
+        followers.forEach((follower) => {
+          const followerListItem = document.createElement("li");
+          const followerImage = document.createElement("img");
+          followerImage.src = follower.image;
+          followerImage.alt = follower.fullName;
+          const followerName = document.createElement("span");
+          followerName.textContent = follower.fullName;
+          followerListItem.appendChild(followerImage);
+          followerListItem.appendChild(followerName);
+          followersList.appendChild(followerListItem);
+
+          const removeButton = document.createElement("button");
+          removeButton.className = "follow-button";
+          removeButton.textContent = "Remove";
+          followerListItem.appendChild(removeButton);
+
+          const followerEmail = follower.email;
+
+          removeButton.addEventListener("click", () => {
+            const currentUser = sessionStorage.getItem("currentUser");
+            const followerEmail = follower.email;
+            const usersData = JSON.parse(localStorage.getItem("users"));
+            const updatedUsers = usersData.map((user) => {
+              if (user.email === currentUser) {
+                user.followers = user.followers.filter(
+                  (email) => email !== followerEmail
+                );
+              }
+              if (user.email === followerEmail && user.follows) {
+                user.follows = user.follows.filter(
+                  (email) => email !== currentUser
+                );
+              }
+              return user;
+            });
+            localStorage.setItem("users", JSON.stringify(updatedUsers));
+            followerListItem.remove();
+          });
+        });
+
+        document.body.appendChild(modal);
+
+        const modClose = document.createElement("span");
+        modClose.className = "close";
+        modClose.textContent = "X";
+
+        modal.appendChild(modClose);
+
+        modClose.onclick = function () {
+          modal.style.display = "none";
+        };
+      }
+
+      function showFollowingModal() {
+        const currentUserData = users.find(
+          (user) => user.email === sessionStorage.getItem("currentUser")
+        );
+
+        const modal = document.createElement("div");
+        modal.className = "following-modal";
+        const modalHeader = document.createElement("h2");
+        modalHeader.textContent = "Following";
+        modal.appendChild(modalHeader);
+
+        const searchBar = document.createElement("input");
+        searchBar.type = "search";
+        searchBar.placeholder = "Search following...";
+        modal.appendChild(searchBar);
+
+        const followingList = document.createElement("ul");
+        modal.appendChild(followingList);
+
+        const following = users
+          .filter((user) => currentUserData.follows.includes(user.email))
+          .map((user) => ({
+            email: user.email,
+            image: user.image,
+            fullName: `${user.firstName} ${user.lastName}`,
+          }));
+
+        searchBar.addEventListener("keypress", (e) => {
+          if (e.key === "Enter") {
+            const searchTerm = searchBar.value.toLowerCase();
+            const filteredFollowing = following.filter((follower) => {
+              return follower.fullName.toLowerCase().includes(searchTerm);
+            });
+            followingList.innerHTML = "";
+            filteredFollowing.forEach((follower) => {
+              const followingListItem = document.createElement("li");
+              const followingImage = document.createElement("img");
+              followingImage.src = follower.image;
+              followingImage.alt = follower.fullName;
+              const followingName = document.createElement("span");
+              followingName.textContent = follower.fullName;
+              followingListItem.appendChild(followingImage);
+              followingListItem.appendChild(followingName);
+              followingList.appendChild(followingListItem);
+
+              const removeButton = document.createElement("button");
+              removeButton.className = "follow-button";
+              removeButton.textContent = "Remove";
+              followingListItem.appendChild(removeButton);
+
+              const followerEmail = follower.email;
+
+              removeButton.addEventListener("click", () => {
+                const currentUser = sessionStorage.getItem("currentUser");
+                const followerEmail = follower.email;
+                const usersData = JSON.parse(localStorage.getItem("users"));
+                const updatedUsers = usersData.map((user) => {
+                  if (user.email === followerEmail && user.followers) {
+                    user.followers = user.followers.filter(
+                      (email) => email !== currentUser
+                    );
+                  }
+                  if (user.email === currentUser) {
+                    user.follows = user.follows.filter(
+                      (email) => email !== followerEmail
+                    );
+                  }
+                  return user;
+                });
+                localStorage.setItem("users", JSON.stringify(updatedUsers));
+                followingListItem.remove();
+              });
+            });
+          }
+        });
+
+        following.forEach((follower) => {
+          const followingListItem = document.createElement("li");
+          const followingImage = document.createElement("img");
+          followingImage.src = follower.image;
+          followingImage.alt = follower.fullName;
+          const followingName = document.createElement("span");
+          followingName.textContent = follower.fullName;
+          followingListItem.appendChild(followingImage);
+          followingListItem.appendChild(followingName);
+          followingList.appendChild(followingListItem);
+
+          const removeButton = document.createElement("button");
+          removeButton.className = "follow-button";
+          removeButton.textContent = "Remove";
+          followingListItem.appendChild(removeButton);
+
+          const followerEmail = follower.email;
+
+          removeButton.addEventListener("click", () => {
+            const currentUser = sessionStorage.getItem("currentUser");
+            const followerEmail = follower.email;
+            const usersData = JSON.parse(localStorage.getItem("users"));
+            const updatedUsers = usersData.map((user) => {
+              if (user.email === followerEmail && user.followers) {
+                user.followers = user.followers.filter(
+                  (email) => email !== currentUser
+                );
+              }
+              if (user.email === currentUser) {
+                user.follows = user.follows.filter(
+                  (email) => email !== followerEmail
+                );
+              }
+              return user;
+            });
+            localStorage.setItem("users", JSON.stringify(updatedUsers));
+            followingListItem.remove();
+          });
+        });
+
+        document.body.appendChild(modal);
+
+        const modClose = document.createElement("span");
+        modClose.className = "close";
+        modClose.textContent = "X";
+
+        modal.appendChild(modClose);
+
+        modClose.onclick = function () {
+          modal.style.display = "none";
+        };
+      }
+      //document.body.appendChild(followingModal);
+      function displayPostImage(imageData) {
+        const galleryImage = document.createElement("img");
+        galleryImage.src = imageData;
+        galleryImage.alt = "Gallery Image";
+        galleryImage.style.width = "100%";
+        galleryImage.style.height = "auto";
+        galleryImage.style.objectFit = "cover";
+        galleryContainer.appendChild(galleryImage);
+      }
+      /*function generatePosts() {
+                  const currentUser = sessionStorage.getItem("currentUser");
+                  const followed = users.find(
+                    (user) => user.email === currentUser
+                  ).follows;
+
+                  for (let i = 0; i < followed.length; i++) {
+                    const user = users.find((user) => user.email === followed[i]);
+                    for (let j = 0; j < user.gallery.length; j++) {
+                      displayGalleryImage(user.gallery[j]);
+                    }
+                  }
+                  //console.log("gata cu tot");
+                }*/
+
+      /*TO DO
+                  - dupa ce nu mai ai nicio eroare in consola, continui cu dezvoltarea
+                */
+    </script>
+  </body>
+</html>
